@@ -97,7 +97,7 @@ const { FREE_ONLY, SUBSCRIPTION_ENABLED } = require("./lib/config");
 app.get("/config", (req, res) => res.json({
   freeOnly: FREE_ONLY,
   subscriptionEnabled: SUBSCRIPTION_ENABLED,
-  minAppVersion: "1.1.0",
+  minAppVersion: "1.0.5",
 }));
 
 // ── Health check ──────────────────────────────────────────────────────────────
