@@ -89,7 +89,9 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error("Kassalapp-oppslag feilet:", err.message);
-    res.status(502).json({ error: "Produktoppslaget svarte ikke", reason: err.name === "AbortError" ? "timeout" : `${err.name}: ${String(err.message).slice(0, 120)}` });
+    // Vis bare feiltype, aldri detaljer som kan avsløre infrastruktur (f.eks. databaseadresse).
+    const reason = err.name === "AbortError" ? "timeout" : err.message === "fetch failed" ? `kassalapp:${err.cause?.code || "nett"}` : "server";
+    res.status(502).json({ error: "Produktoppslaget svarte ikke", reason });
   }
 });
 
