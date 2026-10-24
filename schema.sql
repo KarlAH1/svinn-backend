@@ -182,3 +182,10 @@ CREATE TABLE IF NOT EXISTS product_cache (
   product     JSONB,
   fetched_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Produktbilder uten bakgrunn (utklipp). png er NULL hvis bildet ikke kunne klippes ut.
+CREATE TABLE IF NOT EXISTS product_cutouts (
+  ean         TEXT        PRIMARY KEY,
+  png         BYTEA,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);

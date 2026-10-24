@@ -3,6 +3,7 @@
 const router = require("express").Router();
 const pool   = require("../db");
 const { rateLimiter } = require("../middleware/rateLimit");
+const { cutout } = require("../lib/cutout");
 
 const HIT_TTL_DAYS = 14;
 const MISS_TTL_HOURS = 24;
@@ -92,6 +93,48 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
     // Vis bare feiltype, aldri detaljer som kan avsløre infrastruktur (f.eks. databaseadresse).
     const reason = err.name === "AbortError" ? "timeout" : err.message === "fetch failed" ? `kassalapp:${err.cause?.code || "nett"}` : "server";
     res.status(502).json({ error: "Produktoppslaget svarte ikke", reason });
+  }
+});
+
+// GET /products/image/:ean — produktbildet uten bakgrunn. Lages én gang og lagres.
+// Henter bare bildeadresser som kom fra Kassalapp (product_cache), aldri fra brukerinput.
+const imageLimit = rateLimiter(120, 60 * 1000);
+router.get("/image/:ean", imageLimit, async (req, res) => {
+  const ean = String(req.params.ean);
+  if (!/^\d{8,14}$/.test(ean)) return res.status(400).json({ error: "Ugyldig strekkode" });
+
+  const send = (png) => {
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=2592000");
+    res.send(png);
+  };
+
+  try {
+    const { rows: done } = await pool.query("SELECT png FROM product_cutouts WHERE ean = $1", [ean]);
+    if (done.length) return done[0].png ? send(done[0].png) : res.status(404).json({ error: "Ingen utklipp" });
+
+    const { rows } = await pool.query("SELECT product->>'image' AS image FROM product_cache WHERE ean = $1", [ean]);
+    const url = rows[0]?.image;
+    if (!url || !url.startsWith("https://")) return res.status(404).json({ error: "Ingen produktbilde" });
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const upstream = await fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+    const type = upstream.headers.get("content-type") || "";
+    if (!upstream.ok || !type.startsWith("image/")) return res.status(404).json({ error: "Fant ikke bildet" });
+    const original = Buffer.from(await upstream.arrayBuffer());
+    if (original.length > 8_000_000) return res.status(404).json({ error: "Bildet er for stort" });
+
+    const png = await cutout(original);
+    await pool.query(
+      "INSERT INTO product_cutouts (ean, png) VALUES ($1, $2) ON CONFLICT (ean) DO UPDATE SET png = $2, created_at = NOW()",
+      [ean, png]
+    );
+    if (!png) return res.status(404).json({ error: "Ingen utklipp" });
+    send(png);
+  } catch (err) {
+    console.error("Utklipp feilet:", err.message);
+    res.status(502).json({ error: "Kunne ikke lage bildet" });
   }
 });
 
