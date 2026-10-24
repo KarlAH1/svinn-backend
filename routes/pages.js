@@ -3,6 +3,8 @@ const router = require("express").Router();
 const { SUPPORT_EMAIL } = require("../lib/config");
 
 const UPDATED = "24. oktober 2026";
+const COMPANY = "Cetchapp AS";
+const COMPANY_DETAILS = "Cetchapp AS, org.nr. 931 304 453, Nylendet 10, 1467 Strømmen";
 
 function page(title, body) {
   return `<!doctype html>
@@ -37,7 +39,7 @@ const PRIVACY = page("Personvernerklæring", `
 <p>Svinn er en app der naboer gir bort uåpnet mat de ikke rekker å bruke. Vi samler bare inn det vi trenger for at det skal fungere, og vi selger aldri personopplysninger.</p>
 
 <h2>Hvem er ansvarlig</h2>
-<p>Svinn er behandlingsansvarlig. Kontakt: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
+<p>Svinn leveres av ${COMPANY_DETAILS}, som er behandlingsansvarlig for opplysningene. Kontakt: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
 
 <h2>Hva vi lagrer</h2>
 <ul>
@@ -70,7 +72,7 @@ const TERMS = page("Vilkår", `
 <p class="muted">Sist oppdatert ${UPDATED}</p>
 
 <h2>1. Hva Svinn er</h2>
-<p>Svinn kobler naboer som vil gi bort uåpnet mat med naboer som vil hente den. Svinn er et teknisk mellomledd og selger ikke mat selv. Svinn er gratis å bruke.</p>
+<p>Svinn leveres av ${COMPANY_DETAILS} («vi»). Svinn kobler naboer som vil gi bort uåpnet mat med naboer som vil hente den. Vi er et teknisk mellomledd og selger ikke mat selv. Svinn er gratis å bruke.</p>
 
 <h2>2. Hva du kan dele</h2>
 <ul>
@@ -91,19 +93,20 @@ const TERMS = page("Vilkår", `
 <p>Du må være minst 18 år for å bruke Svinn.</p>
 
 <h2>6. Ansvar</h2>
-<p>Svinn leveres som den er. Svinn er ikke ansvarlig for maten som deles, for avtaler mellom brukere, eller for tap som oppstår ved bruk av appen, så langt loven tillater det.</p>
+<p>Svinn leveres som den er. ${COMPANY} er ikke ansvarlig for maten som deles, for avtaler mellom brukere, eller for tap som oppstår ved bruk av appen, så langt loven tillater det.</p>
 
 <h2>7. Endringer</h2>
 <p>Vi kan oppdatere vilkårene. Ved vesentlige endringer sier vi fra i appen.</p>
 
 <h2>8. Kontakt</h2>
-<p><a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>. Norsk rett gjelder.</p>
+<p>${COMPANY_DETAILS}. E-post: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>. Norsk rett gjelder.</p>
 `);
 
 const SUPPORT = page("Support", `
 <h1>Support</h1>
 <p>Trenger du hjelp, vil du melde fra om noe, eller har du spørsmål? Send oss en e-post, så svarer vi så fort vi kan.</p>
 <p><a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>
+<p class="muted">Svinn leveres av ${COMPANY_DETAILS}.</p>
 <h2>Slette konto</h2>
 <p>Åpne Svinn, gå til <b>Profil → Slett konto</b>. Kontoen og alt innholdet ditt slettes permanent med en gang.</p>
 <h2>Melde fra om en bruker</h2>
