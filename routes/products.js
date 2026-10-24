@@ -51,7 +51,8 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
       return rows[0].product ? res.json(rows[0].product) : res.status(404).json({ error: "Fant ikke varen" });
     }
 
-    const key = process.env.KASSALAPP_API_KEY;
+    // Tåler at nøkkelen er limt inn med mellomrom, linjeskift, anførselstegn eller «Bearer » foran.
+    const key = String(process.env.KASSALAPP_API_KEY || "").trim().replace(/^["']|["']$/g, "").replace(/^Bearer\s+/i, "");
     if (!key) return res.status(503).json({ error: "Produktoppslag er ikke satt opp" });
 
     const controller = new AbortController();
@@ -88,7 +89,7 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error("Kassalapp-oppslag feilet:", err.message);
-    res.status(502).json({ error: "Produktoppslaget svarte ikke", reason: err.name === "AbortError" ? "timeout" : "error" });
+    res.status(502).json({ error: "Produktoppslaget svarte ikke", reason: err.name === "AbortError" ? "timeout" : `${err.name}: ${String(err.message).slice(0, 120)}` });
   }
 });
 
