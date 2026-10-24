@@ -53,7 +53,7 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
 
     // Tåler at nøkkelen er limt inn med mellomrom, linjeskift, anførselstegn eller «Bearer » foran.
     const key = String(process.env.KASSALAPP_API_KEY || "").trim().replace(/^["']|["']$/g, "").replace(/^Bearer\s+/i, "");
-    if (!key) return res.status(503).json({ error: "Produktoppslag er ikke satt opp" });
+    if (!key) return res.status(503).json({ error: "Produktoppslag er ikke satt opp", reason: "key_missing" });
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
@@ -64,7 +64,7 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
 
     if (upstream.status === 401) {
       console.error("KASSALAPP_API_KEY er ugyldig eller utløpt (401 fra Kassalapp)");
-      return res.status(503).json({ error: "Produktoppslag er ikke satt opp" });
+      return res.status(503).json({ error: "Produktoppslag er ikke satt opp", reason: "key_rejected" });
     }
     if (upstream.status === 429) return res.status(503).json({ error: "Produktoppslaget er travelt. Prøv igjen om litt." });
     if (upstream.status === 404) {
