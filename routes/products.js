@@ -73,7 +73,10 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
       );
       return res.status(404).json({ error: "Fant ikke varen" });
     }
-    if (!upstream.ok) return res.status(502).json({ error: "Produktoppslaget svarte ikke" });
+    if (!upstream.ok) {
+      console.error(`Kassalapp svarte ${upstream.status} for ${ean}: ${(await upstream.text()).slice(0, 200)}`);
+      return res.status(502).json({ error: "Produktoppslaget svarte ikke", upstream: upstream.status });
+    }
 
     const body = await upstream.json();
     const product = normalize(body.data);
@@ -85,7 +88,7 @@ router.get("/ean/:ean", lookupLimit, async (req, res) => {
     res.json(product);
   } catch (err) {
     console.error("Kassalapp-oppslag feilet:", err.message);
-    res.status(502).json({ error: "Produktoppslaget svarte ikke" });
+    res.status(502).json({ error: "Produktoppslaget svarte ikke", reason: err.name === "AbortError" ? "timeout" : "error" });
   }
 });
 
